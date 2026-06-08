@@ -19,27 +19,36 @@
 - Email/password signup working
 - Login working
 - Protected dashboard built
-- Resend SMTP connected (bypasses Supabase 2/hr limit)
-- Email confirmation turned off for development
+- Resend SMTP connected
+- Email confirmation off for development
 
 ## Phase 3 — Onboarding & Profile Engine ✅
 - Profiles table created in Supabase with RLS policies
 - 5-step onboarding form built
-- Fields: name, age, gender, state, language, education,
-  graduation year, subject, employment, income, dependents,
-  study hours, prep start, relocation, risk tolerance,
-  salary target, career aspiration, family responsibilities
-- Data saves correctly to Supabase on completion
-- User redirected to dashboard after onboarding
+- All profile fields saving correctly to Supabase
 
-## Phase 4 — Exam Recommendation Engine 🔜
-- Claude AI recommends up to 3 compatible exams
-- Fit score, timeline, salary range, reasoning per exam
+## Phase 4 — Exam Recommendation Engine ✅
+- Exam recommendations table created in Supabase
+- Mock AI engine with profile-based scoring
+- Recommendation cards with fit scores, salary ranges, reasoning
 - Three Exam Rule enforced
-- Requires Anthropic API key (still pending)
+- Save to Supabase working
+- Dashboard link unlocked
 
-## Phase 5 — Study Plan Generator 🔜
-## Phase 6+ — Knowledge, Testing, Accountability 🔜
+## Phase 5 — Study Plan Generator ✅
+- Study plans table created in Supabase
+- Mock AI engine generates weekly plan based on exams and hours
+- Day-by-day session view with subject and activity
+- Daily routine breakdown (morning/afternoon/evening/night)
+- Monthly milestones (4 weeks)
+- Save to Supabase with version history
+- Regenerate option working
+- Dashboard link unlocked
+
+## Phase 6 — Daily Check-in & Accountability 🔜
+## Phase 7 — Admin Assistant (exam notifications) 🔜
+## Phase 8 — Payments (Razorpay) 🔜
+## Phase 9 — Real Claude AI (swap mock engines) 🔜
 
 ## Environment Variables
 ### Local (.env.local)
@@ -52,14 +61,14 @@
 - ANTHROPIC_API_KEY=pending
 
 ## Known Issues
-- Anthropic API key pending (Indian card not accepted — trying Wise)
+- Anthropic API key pending
 - Email confirmation is OFF — turn ON before public launch
-- /onboarding is not protected if user has already completed onboarding
+- Mock AI engines in use — swap to Claude API when key arrives
 
 ## Stack
 - Frontend: Next.js 14 (App Router) + Tailwind CSS
 - Database + Auth: Supabase
-- AI: Anthropic Claude API (claude-sonnet-4-20250514)
+- AI: Anthropic Claude API (pending — mock engine in use)
 - Hosting: Vercel
 - Email: Resend (connected)
 - Payments: Razorpay (not yet integrated)
