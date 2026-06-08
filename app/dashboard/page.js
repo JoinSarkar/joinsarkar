@@ -109,7 +109,7 @@ export default function DashboardPage() {
               </a>
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center justify-between opacity-50">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 font-bold text-sm">2</div>
                 <div>
@@ -117,7 +117,9 @@ export default function DashboardPage() {
                   <div className="text-white/40 text-xs mt-0.5">AI picks your best 3 exams based on your profile</div>
                 </div>
               </div>
-              <span className="text-white/30 text-sm shrink-0">Locked</span>
+              <a href="/recommendations" className="text-saffron text-sm font-medium hover:underline shrink-0">
+                View
+              </a>
             </div>
 
             <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center justify-between opacity-50">
