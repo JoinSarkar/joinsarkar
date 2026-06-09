@@ -1,74 +1,85 @@
-# JOIN SARKAR — Build Log
+# JOIN SARKAR - Build Log
 
-## Phase 0 — Accounts & Credentials ✅
-- GitHub: JoinSarkar account created
-- Supabase: Project created, URL and anon key saved
-- Vercel: Connected to GitHub, live deployment working
-- Resend: Account created, SMTP connected to Supabase
-- Anthropic: PENDING — Indian card issue, resolving via Wise
+## STATUS: COMPLETE
 
-## Phase 1 — Project Skeleton ✅
-- Next.js 14 project created with App Router
-- Tailwind CSS configured with brand colours
-- DM Sans font imported
-- Landing page built (hero, how-it-works, pricing, footer)
-- Deployed live at: https://joinsarkar.vercel.app
+Live URL: https://joinsarkar.vercel.app
 
-## Phase 2 — Auth & User Management ✅
-- Supabase Auth connected
-- Email/password signup working
-- Login working
-- Protected dashboard built
+## All Phases
+
+### Phase 0 - Accounts and Credentials
+- GitHub, Supabase, Vercel, Resend, Anthropic, Razorpay all set up
+
+### Phase 1 - Landing Page
+- Next.js 14 + Tailwind CSS
+- Brand design system (saffron, ink, teal, DM Sans)
+- Landing page with hero, pricing, how-it-works
+
+### Phase 2 - Auth
+- Supabase Auth with email/password
+- Signup, login, logout
+- Protected dashboard
 - Resend SMTP connected
-- Email confirmation off for development
 
-## Phase 3 — Onboarding & Profile Engine ✅
-- Profiles table created in Supabase with RLS policies
-- 5-step onboarding form built
-- All profile fields saving correctly to Supabase
+### Phase 3 - Onboarding and Profile Engine
+- Profiles table in Supabase with RLS
+- 5-step onboarding form
+- All profile data saving correctly
 
-## Phase 4 — Exam Recommendation Engine ✅
-- Exam recommendations table created in Supabase
-- Mock AI engine with profile-based scoring
-- Recommendation cards with fit scores, salary ranges, reasoning
+### Phase 4 - Exam Recommendation Engine
+- Claude AI recommends 3 compatible exams
+- Fit scores, salary ranges, career outcomes
 - Three Exam Rule enforced
-- Save to Supabase working
-- Dashboard link unlocked
+- Saved to Supabase
 
-## Phase 5 — Study Plan Generator ✅
-- Study plans table created in Supabase
-- Mock AI engine generates weekly plan based on exams and hours
-- Day-by-day session view with subject and activity
-- Daily routine breakdown (morning/afternoon/evening/night)
-- Monthly milestones (4 weeks)
-- Save to Supabase with version history
-- Regenerate option working
-- Dashboard link unlocked
+### Phase 5 - Study Plan Generator
+- Claude AI generates weekly study plan
+- Day-by-day sessions with subjects and activities
+- Daily routine and monthly milestones
+- Version history in Supabase
 
-## Phase 6 — Daily Check-in & Accountability 🔜
-## Phase 7 — Admin Assistant (exam notifications) 🔜
-## Phase 8 — Payments (Razorpay) 🔜
-## Phase 9 — Real Claude AI (swap mock engines) 🔜
+### Phase 6 - Daily Check-in and Accountability
+- Morning check-in with mood, hours, topics, mock score
+- Streak tracking and total hours
+- Last 7 days history
+- Live stats on dashboard
+
+### Phase 7 - Real Claude AI
+- claude-sonnet-4-6 powering recommendations and study plans
+- Personalised reasoning per user profile
+
+### Phase 8 - Payments
+- Razorpay integrated (test mode)
+- Rs 299 Objective and Rs 499 Advanced plans
+- Payment verification and subscription stored in Supabase
+
+### Phase 9 - Exam Notification Tracker
+- Track notifications, deadlines, admit cards, results
+- Pin, mark read, delete entries
+- Days-left countdown badges
+- Filter by type
+
+## Pre-Launch Checklist
+- [ ] Turn email confirmation ON in Supabase
+- [ ] Switch Razorpay to live mode
+- [ ] Complete Razorpay KYC
+- [ ] Add custom domain in Vercel
+- [ ] Add privacy policy and terms pages
 
 ## Environment Variables
 ### Local (.env.local)
-- NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-- NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
+- ANTHROPIC_API_KEY
+- RAZORPAY_KEY_ID
+- RAZORPAY_KEY_SECRET
+- NEXT_PUBLIC_RAZORPAY_KEY_ID
 
-### Vercel (production)
-- NEXT_PUBLIC_SUPABASE_URL=added
-- NEXT_PUBLIC_SUPABASE_ANON_KEY=added
-- ANTHROPIC_API_KEY=pending
-
-## Known Issues
-- Anthropic API key pending
-- Email confirmation is OFF — turn ON before public launch
-- Mock AI engines in use — swap to Claude API when key arrives
+### Vercel (all above added)
 
 ## Stack
-- Frontend: Next.js 14 (App Router) + Tailwind CSS
+- Frontend: Next.js 14 App Router + Tailwind CSS
 - Database + Auth: Supabase
-- AI: Anthropic Claude API (pending — mock engine in use)
+- AI: Anthropic Claude (claude-sonnet-4-6)
 - Hosting: Vercel
-- Email: Resend (connected)
-- Payments: Razorpay (not yet integrated)
+- Email: Resend
+- Payments: Razorpay
