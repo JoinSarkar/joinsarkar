@@ -14,17 +14,14 @@ export default function StudyPlanPage() {
   const [user, setUser] = useState(null)
   const router = useRouter()
 
-  useEffect(() => {
-    async function loadPlan() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login'); return }
-      setUser(user)
+  async function fetchAndGeneratePlan(currentUser, forceRegenerate = false) {
+    const supabase = createClient()
 
+    if (!forceRegenerate) {
       const { data: existing } = await supabase
         .from('study_plans')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', currentUser.id)
         .eq('is_active', true)
         .order('version', { ascending: false })
         .limit(1)
@@ -36,39 +33,58 @@ export default function StudyPlanPage() {
         setLoading(false)
         return
       }
+    }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('study_hours_per_day')
-        .eq('id', user.id)
-        .single()
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('study_hours_per_day')
+      .eq('id', currentUser.id)
+      .single()
 
-      const { data: exams } = await supabase
-        .from('exam_recommendations')
-        .select('exam_name')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
+    if (profileError || !profile) {
+      router.push('/onboarding')
+      return
+    }
 
-      if (!exams || exams.length === 0) {
-        router.push('/recommendations')
-        return
-      }
+    const { data: exams } = await supabase
+      .from('exam_recommendations')
+      .select('exam_name')
+      .eq('user_id', currentUser.id)
+      .eq('is_active', true)
 
-      const examNames = exams.map(e => e.exam_name)
-      const hoursPerDay = profile?.study_hours_per_day || 4
+    if (!exams || exams.length === 0) {
+      router.push('/recommendations')
+      return
+    }
 
+    const examNames = exams.map(e => e.exam_name)
+    const hoursPerDay = profile?.study_hours_per_day || 4
+
+    try {
       const response = await fetch('/api/studyplan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ exams: examNames, hoursPerDay }),
       })
-
       const data = await response.json()
-      if (data.error) { setError('Failed to generate plan.'); setLoading(false); return }
+      if (data.error) { setError('Failed to generate plan. Please try again.'); setLoading(false); return }
       setPlan(data.plan)
-      setLoading(false)
+      setSaved(false)
+    } catch (e) {
+      setError('Failed to connect to AI. Please try again.')
     }
-    loadPlan()
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    async function init() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/login'); return }
+      setUser(user)
+      await fetchAndGeneratePlan(user, false)
+    }
+    init()
   }, [])
 
   async function savePlan() {
@@ -103,33 +119,10 @@ export default function StudyPlanPage() {
   async function regenerate() {
     setLoading(true)
     setSaved(false)
+    setError('')
     const supabase = createClient()
     await supabase.from('study_plans').update({ is_active: false }).eq('user_id', user.id)
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('study_hours_per_day')
-      .eq('id', user.id)
-      .single()
-
-    const { data: exams } = await supabase
-      .from('exam_recommendations')
-      .select('exam_name')
-      .eq('user_id', user.id)
-      .eq('is_active', true)
-
-    const response = await fetch('/api/studyplan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        exams: exams.map(e => e.exam_name),
-        hoursPerDay: profile?.study_hours_per_day || 4,
-      }),
-    })
-
-    const data = await response.json()
-    setPlan(data.plan)
-    setLoading(false)
+    await fetchAndGeneratePlan(user, true)
   }
 
   if (loading) {
@@ -143,8 +136,11 @@ export default function StudyPlanPage() {
 
   if (!plan) {
     return (
-      <main style={{ backgroundColor: 'var(--ink)' }} className="min-h-screen flex items-center justify-center">
-        <p className="text-white/50 text-sm">No plan found. Please complete onboarding first.</p>
+      <main style={{ backgroundColor: 'var(--ink)' }} className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <p className="text-white/50 text-sm mb-4">Could not load your plan.</p>
+        <button onClick={() => { setLoading(true); fetchAndGeneratePlan(user, true) }} className="bg-saffron text-white text-sm font-semibold px-6 py-3 rounded-xl hover:bg-saffron/90 transition-colors">
+          Try again
+        </button>
       </main>
     )
   }
@@ -277,11 +273,7 @@ export default function StudyPlanPage() {
 
         <div className="flex gap-3">
           {!saved ? (
-            <button
-              onClick={savePlan}
-              disabled={saving}
-              className="flex-1 bg-saffron text-white font-semibold py-3 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50"
-            >
+            <button onClick={savePlan} disabled={saving} className="flex-1 bg-saffron text-white font-semibold py-3 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50">
               {saving ? 'Saving...' : 'Save this plan'}
             </button>
           ) : (

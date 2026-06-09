@@ -64,15 +64,19 @@ export default function RecommendationsPage() {
 
       if (profileError || !profile) { router.push('/onboarding'); return }
 
-      const response = await fetch('/api/recommend', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profile }),
-      })
-
-      const data = await response.json()
-      if (data.error) { setError('Failed to generate recommendations.'); setLoading(false); return }
-      setRecommendations(data.recommendations)
+      try {
+        const response = await fetch('/api/recommend', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profile }),
+        })
+        const data = await response.json()
+        if (data.error) { setError(data.error); setLoading(false); return }
+        if (!Array.isArray(data.recommendations)) { setError('Unexpected response from AI. Please try again.'); setLoading(false); return }
+        setRecommendations(data.recommendations)
+      } catch (e) {
+        setError('Failed to connect to AI. Please try again.')
+      }
       setLoading(false)
     }
     loadAndRecommend()
@@ -94,13 +98,20 @@ export default function RecommendationsPage() {
     const supabase = createClient()
     await supabase.from('exam_recommendations').delete().eq('user_id', user.id)
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-    const response = await fetch('/api/recommend', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ profile }),
-    })
-    const data = await response.json()
-    setRecommendations(data.recommendations)
+
+    try {
+      const response = await fetch('/api/recommend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile }),
+      })
+      const data = await response.json()
+      if (data.error) { setError(data.error); setLoading(false); return }
+      if (!Array.isArray(data.recommendations)) { setError('Unexpected response. Please try again.'); setLoading(false); return }
+      setRecommendations(data.recommendations)
+    } catch (e) {
+      setError('Failed to connect to AI. Please try again.')
+    }
     setLoading(false)
   }
 
@@ -132,6 +143,22 @@ export default function RecommendationsPage() {
             </button>
           </div>
         </div>
+
+        {error && (
+          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 flex items-center justify-between">
+            <p className="text-red-400 text-sm">{error}</p>
+            <button onClick={regenerate} className="text-saffron text-xs ml-4 shrink-0 hover:underline">Try again</button>
+          </div>
+        )}
+
+        {recommendations.length === 0 && !error && (
+          <div className="text-center py-20">
+            <p className="text-white/40 text-sm mb-4">No recommendations yet.</p>
+            <button onClick={regenerate} className="bg-saffron text-white text-sm font-semibold px-6 py-3 rounded-xl hover:bg-saffron/90 transition-colors">
+              Generate recommendations
+            </button>
+          </div>
+        )}
 
         <div className="space-y-4 mb-8">
           {recommendations.map((exam, index) => (
@@ -176,33 +203,27 @@ export default function RecommendationsPage() {
           ))}
         </div>
 
-        <div className="bg-saffron/5 border border-saffron/20 rounded-2xl p-4 mb-8">
-          <p className="text-saffron/80 text-xs leading-relaxed">
-            <span className="font-semibold">The Three Exam Rule:</span> You are limited to 3 active exams at any time. Spreading across more exams dilutes preparation and reduces your chances in all of them.
-          </p>
-        </div>
+        {recommendations.length > 0 && (
+          <>
+            <div className="bg-saffron/5 border border-saffron/20 rounded-2xl p-4 mb-8">
+              <p className="text-saffron/80 text-xs leading-relaxed">
+                <span className="font-semibold">The Three Exam Rule:</span> You are limited to 3 active exams at any time. Spreading across more exams dilutes preparation and reduces your chances in all of them.
+              </p>
+            </div>
 
-        {error && (
-          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
-            <p className="text-red-400 text-sm">{error}</p>
-          </div>
+            <div className="flex gap-3">
+              {!saved ? (
+                <button onClick={saveRecommendations} disabled={saving} className="flex-1 bg-saffron text-white font-semibold py-3 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50">
+                  {saving ? 'Saving...' : 'Confirm these exams'}
+                </button>
+              ) : (
+                <a href="/dashboard" className="flex-1 bg-teal text-white font-semibold py-3 rounded-xl hover:bg-teal/90 transition-colors text-center">
+                  Exams confirmed - go to dashboard
+                </a>
+              )}
+            </div>
+          </>
         )}
-
-        <div className="flex gap-3">
-          {!saved ? (
-            <button
-              onClick={saveRecommendations}
-              disabled={saving}
-              className="flex-1 bg-saffron text-white font-semibold py-3 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50"
-            >
-              {saving ? 'Saving...' : 'Confirm these exams'}
-            </button>
-          ) : (
-            <a href="/dashboard" className="flex-1 bg-teal text-white font-semibold py-3 rounded-xl hover:bg-teal/90 transition-colors text-center">
-              Exams confirmed - go to dashboard
-            </a>
-          )}
-        </div>
 
       </div>
     </main>
