@@ -4,6 +4,212 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
 
+function QuizModal({ subject, exams, onClose }) {
+  const [questions, setQuestions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [current, setCurrent] = useState(0)
+  const [selected, setSelected] = useState(null)
+  const [answers, setAnswers] = useState([])
+  const [showResult, setShowResult] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    async function loadQuiz() {
+      try {
+        const response = await fetch('/api/quiz', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subject, examContext: exams?.join(', ') }),
+        })
+        const data = await response.json()
+        if (data.error) { setError(data.error); setLoading(false); return }
+        setQuestions(data.questions)
+        setLoading(false)
+      } catch (e) {
+        setError('Failed to load quiz. Please try again.')
+        setLoading(false)
+      }
+    }
+    loadQuiz()
+  }, [])
+
+  function handleAnswer(option) {
+    if (selected) return
+    setSelected(option)
+    setAnswers(prev => [...prev, { question: current, selected: option, correct: questions[current].correct }])
+  }
+
+  function handleNext() {
+    if (current < questions.length - 1) {
+      setCurrent(prev => prev + 1)
+      setSelected(null)
+    } else {
+      setShowResult(true)
+    }
+  }
+
+  const score = answers.filter(a => a.selected === a.correct).length
+
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4">
+      <div className="bg-ink border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-white font-bold text-lg">Quiz — {subject}</h2>
+              {!showResult && !loading && (
+                <p className="text-white/40 text-xs mt-0.5">Question {current + 1} of {questions.length}</p>
+              )}
+            </div>
+            <button onClick={onClose} className="text-white/40 hover:text-white text-xl transition-colors">x</button>
+          </div>
+
+          {loading && (
+            <div className="flex flex-col items-center py-12 gap-4">
+              <div className="w-8 h-8 border-2 border-saffron border-t-transparent rounded-full animate-spin" />
+              <p className="text-white/50 text-sm">Generating quiz...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+
+          {!loading && !error && !showResult && questions[current] && (
+            <div>
+              <div className="bg-white/5 rounded-xl p-4 mb-6">
+                <p className="text-white text-sm leading-relaxed">{questions[current].question}</p>
+              </div>
+              <div className="space-y-3 mb-6">
+                {Object.entries(questions[current].options).map(([key, value]) => {
+                  let style = 'bg-white/5 border-white/10 text-white/70'
+                  if (selected) {
+                    if (key === questions[current].correct) style = 'bg-teal/20 border-teal text-white'
+                    else if (key === selected && selected !== questions[current].correct) style = 'bg-red-500/20 border-red-500 text-white'
+                    else style = 'bg-white/5 border-white/10 text-white/30'
+                  }
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => handleAnswer(key)}
+                      className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-colors ${style}`}
+                    >
+                      <span className="font-bold mr-2">{key}.</span>{value}
+                    </button>
+                  )
+                })}
+              </div>
+              {selected && (
+                <div className="bg-white/5 rounded-xl p-4 mb-6">
+                  <p className="text-white/40 text-xs mb-1">Explanation</p>
+                  <p className="text-white/70 text-sm leading-relaxed">{questions[current].explanation}</p>
+                </div>
+              )}
+              {selected && (
+                <button
+                  onClick={handleNext}
+                  className="w-full bg-saffron text-white font-semibold py-3 rounded-xl hover:bg-saffron/90 transition-colors"
+                >
+                  {current < questions.length - 1 ? 'Next question' : 'See results'}
+                </button>
+              )}
+            </div>
+          )}
+
+          {showResult && (
+            <div className="text-center py-6">
+              <div className="w-20 h-20 rounded-full border-4 border-saffron flex items-center justify-center mx-auto mb-4">
+                <span className="text-white text-2xl font-bold">{score}/{questions.length}</span>
+              </div>
+              <p className="text-white font-bold text-xl mb-2">
+                {score === questions.length ? 'Perfect score!' : score >= questions.length * 0.7 ? 'Well done!' : score >= questions.length * 0.4 ? 'Keep practising' : 'Needs more work'}
+              </p>
+              <p className="text-white/50 text-sm mb-8">
+                You got {score} out of {questions.length} questions correct on {subject}
+              </p>
+              <div className="space-y-2 text-left mb-8">
+                {answers.map((a, i) => (
+                  <div key={i} className="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-2">
+                    <span className={a.selected === a.correct ? 'text-teal' : 'text-red-400'}>
+                      {a.selected === a.correct ? 'correct' : 'wrong'}
+                    </span>
+                    <span className="text-white/50 text-sm">Q{i + 1} — You chose {a.selected}, answer was {a.correct}</span>
+                  </div>
+                ))}
+              </div>
+              <button onClick={onClose} className="w-full bg-saffron text-white font-semibold py-3 rounded-xl hover:bg-saffron/90 transition-colors">
+                Back to study plan
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function NotesModal({ subject, exams, onClose }) {
+  const [notes, setNotes] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    async function loadNotes() {
+      try {
+        const response = await fetch('/api/notes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subject, examContext: exams?.join(', ') }),
+        })
+        const data = await response.json()
+        if (data.error) { setError(data.error); setLoading(false); return }
+        setNotes(data.notes)
+        setLoading(false)
+      } catch (e) {
+        setError('Failed to load notes. Please try again.')
+        setLoading(false)
+      }
+    }
+    loadNotes()
+  }, [])
+
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4">
+      <div className="bg-ink border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-white font-bold text-lg">Notes — {subject}</h2>
+            <button onClick={onClose} className="text-white/40 hover:text-white text-xl transition-colors">x</button>
+          </div>
+          {loading && (
+            <div className="flex flex-col items-center py-12 gap-4">
+              <div className="w-8 h-8 border-2 border-saffron border-t-transparent rounded-full animate-spin" />
+              <p className="text-white/50 text-sm">Generating notes...</p>
+            </div>
+          )}
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+          {!loading && !error && (
+            <div className="prose prose-invert max-w-none">
+              <div className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap">{notes}</div>
+            </div>
+          )}
+          {!loading && !error && (
+            <button onClick={onClose} className="w-full mt-6 bg-saffron text-white font-semibold py-3 rounded-xl hover:bg-saffron/90 transition-colors">
+              Close
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function StudyPlanPage() {
   const [plan, setPlan] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -12,11 +218,12 @@ export default function StudyPlanPage() {
   const [error, setError] = useState('')
   const [activeDay, setActiveDay] = useState('Monday')
   const [user, setUser] = useState(null)
+  const [quizSubject, setQuizSubject] = useState(null)
+  const [notesSubject, setNotesSubject] = useState(null)
   const router = useRouter()
 
   async function fetchAndGeneratePlan(currentUser, forceRegenerate = false) {
     const supabase = createClient()
-
     if (!forceRegenerate) {
       const { data: existing } = await supabase
         .from('study_plans')
@@ -26,7 +233,6 @@ export default function StudyPlanPage() {
         .order('version', { ascending: false })
         .limit(1)
         .single()
-
       if (existing) {
         setPlan(existing.plan_data)
         setSaved(true)
@@ -34,32 +240,20 @@ export default function StudyPlanPage() {
         return
       }
     }
-
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('study_hours_per_day')
       .eq('id', currentUser.id)
       .single()
-
-    if (profileError || !profile) {
-      router.push('/onboarding')
-      return
-    }
-
+    if (profileError || !profile) { router.push('/onboarding'); return }
     const { data: exams } = await supabase
       .from('exam_recommendations')
       .select('exam_name')
       .eq('user_id', currentUser.id)
       .eq('is_active', true)
-
-    if (!exams || exams.length === 0) {
-      router.push('/recommendations')
-      return
-    }
-
+    if (!exams || exams.length === 0) { router.push('/recommendations'); return }
     const examNames = exams.map(e => e.exam_name)
     const hoursPerDay = profile?.study_hours_per_day || 4
-
     try {
       const response = await fetch('/api/studyplan', {
         method: 'POST',
@@ -90,7 +284,6 @@ export default function StudyPlanPage() {
   async function savePlan() {
     setSaving(true)
     const supabase = createClient()
-
     const { data: existing } = await supabase
       .from('study_plans')
       .select('version')
@@ -98,11 +291,8 @@ export default function StudyPlanPage() {
       .order('version', { ascending: false })
       .limit(1)
       .single()
-
     const nextVersion = existing ? existing.version + 1 : 1
-
     await supabase.from('study_plans').update({ is_active: false }).eq('user_id', user.id)
-
     const { error } = await supabase.from('study_plans').insert({
       user_id: user.id,
       version: nextVersion,
@@ -111,7 +301,6 @@ export default function StudyPlanPage() {
       plan_data: plan,
       is_active: true,
     })
-
     if (error) { setError('Failed to save plan.') } else { setSaved(true) }
     setSaving(false)
   }
@@ -149,8 +338,22 @@ export default function StudyPlanPage() {
 
   return (
     <main style={{ backgroundColor: 'var(--ink)' }} className="min-h-screen px-6 py-12 md:px-16">
-      <div className="max-w-3xl mx-auto">
+      {quizSubject && (
+        <QuizModal
+          subject={quizSubject}
+          exams={plan.exams}
+          onClose={() => setQuizSubject(null)}
+        />
+      )}
+      {notesSubject && (
+        <NotesModal
+          subject={notesSubject}
+          exams={plan.exams}
+          onClose={() => setNotesSubject(null)}
+        />
+      )}
 
+      <div className="max-w-3xl mx-auto">
         <div className="mb-10">
           <a href="/dashboard">
             <span className="text-saffron font-bold text-xl">JOIN</span>
@@ -159,9 +362,7 @@ export default function StudyPlanPage() {
           <div className="mt-6 flex items-center justify-between">
             <div>
               <h1 className="text-white text-2xl font-bold mb-1">Your study plan</h1>
-              <p className="text-white/50 text-sm">
-                {plan.hours_per_day} hours/day across {plan.exams?.join(', ')}
-              </p>
+              <p className="text-white/50 text-sm">{plan.hours_per_day} hours/day across {plan.exams?.join(', ')}</p>
             </div>
             <button onClick={regenerate} className="text-white/40 text-xs border border-white/10 px-3 py-2 rounded-lg hover:border-white/30 transition-colors shrink-0">
               Regenerate
@@ -212,11 +413,7 @@ export default function StudyPlanPage() {
               <button
                 key={d.day}
                 onClick={() => setActiveDay(d.day)}
-                className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-                  activeDay === d.day
-                    ? 'bg-saffron text-white'
-                    : 'bg-white/5 text-white/50 hover:bg-white/10'
-                }`}
+                className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${activeDay === d.day ? 'bg-saffron text-white' : 'bg-white/5 text-white/50 hover:bg-white/10'}`}
               >
                 {d.day.slice(0, 3)}
               </button>
@@ -243,7 +440,21 @@ export default function StudyPlanPage() {
                       <span className="text-white/40 text-xs">{s.duration}</span>
                     </div>
                     <p className="text-white font-medium text-sm mb-1">{s.subject}</p>
-                    <p className="text-white/60 text-sm">{s.activity}</p>
+                    <p className="text-white/60 text-sm mb-4">{s.activity}</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setQuizSubject(s.subject)}
+                        className="text-xs px-3 py-1.5 rounded-lg bg-saffron/10 border border-saffron/20 text-saffron hover:bg-saffron/20 transition-colors"
+                      >
+                        Quiz me
+                      </button>
+                      <button
+                        onClick={() => setNotesSubject(s.subject)}
+                        className="text-xs px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 transition-colors"
+                      >
+                        Give me notes
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
@@ -282,7 +493,6 @@ export default function StudyPlanPage() {
             </a>
           )}
         </div>
-
       </div>
     </main>
   )
