@@ -11,7 +11,6 @@ export default function DashboardPage() {
   const [todayCheckin, setTodayCheckin] = useState(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
-
   const today = new Date().toISOString().split('T')[0]
 
   useEffect(() => {
@@ -20,13 +19,11 @@ export default function DashboardPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       setUser(user)
-
       const [statsRes, examsRes, checkinRes] = await Promise.all([
         supabase.from('study_stats').select('*').eq('user_id', user.id).single(),
         supabase.from('exam_recommendations').select('exam_name, fit_score').eq('user_id', user.id).eq('is_active', true),
         supabase.from('daily_checkins').select('*').eq('user_id', user.id).eq('date', today).single(),
       ])
-
       setStats(statsRes.data)
       setExams(examsRes.data || [])
       setTodayCheckin(checkinRes.data)
@@ -49,45 +46,38 @@ export default function DashboardPage() {
     )
   }
 
+  const links = [
+    { num: '1', title: 'Complete your profile', desc: 'Tell us about yourself so we can personalise everything', href: '/onboarding', label: 'Edit', highlight: true },
+    { num: '2', title: 'Exam recommendations', desc: 'Your personalised exam shortlist', href: '/recommendations', label: 'View', highlight: false },
+    { num: '3', title: 'Study plan', desc: 'Your daily and weekly schedule', href: '/studyplan', label: 'View', highlight: false },
+    { num: '4', title: 'Daily check-in', desc: 'Log your hours, mood, and mock scores', href: '/checkin', label: null, highlight: false },
+    { num: '5', title: 'Exam tracker', desc: 'Notifications, deadlines, admit cards, results', href: '/notifications', label: 'View', highlight: false },
+    { num: '6', title: 'Subscription', desc: 'Manage your plan', href: '/pricing', label: 'View', highlight: false },
+  ]
+
   return (
     <main style={{ backgroundColor: 'var(--ink)' }} className="min-h-screen">
-
       <nav className="border-b border-white/10 px-6 py-4 md:px-16 flex items-center justify-between">
         <div>
           <span className="text-saffron font-bold text-xl">JOIN</span>
           <span className="text-white font-bold text-xl"> SARKAR</span>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-white/50 text-sm hidden sm:block">
-            {user?.user_metadata?.full_name || user?.email}
-          </span>
-          <button onClick={handleLogout} className="text-white/50 text-sm px-4 py-2 rounded-lg border border-white/10 hover:border-white/30 transition-colors">
-            Log out
-          </button>
+          <span className="text-white/50 text-sm hidden sm:block">{user?.user_metadata?.full_name || user?.email}</span>
+          <button onClick={handleLogout} className="text-white/50 text-sm px-4 py-2 rounded-lg border border-white/10 hover:border-white/30 transition-colors">Log out</button>
         </div>
       </nav>
 
       <div className="px-6 py-12 md:px-16 max-w-5xl">
-
         <div className="mb-10 flex items-start justify-between">
           <div>
-            <h1 className="text-white text-3xl font-bold mb-2">
-              Welcome back, {user?.user_metadata?.full_name?.split(' ')[0] || 'Aspirant'} 👋
-            </h1>
-            <p className="text-white/50">
-              {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
-            </p>
+            <h1 className="text-white text-3xl font-bold mb-2">Welcome back, {user?.user_metadata?.full_name?.split(' ')[0] || 'Aspirant'} 👋</h1>
+            <p className="text-white/50">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
           </div>
-          {!todayCheckin?.checked_in && (
-            <a href="/checkin" className="shrink-0 bg-saffron text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-saffron/90 transition-colors">
-              Check in today
-            </a>
-          )}
-          {todayCheckin?.checked_in && (
-            <a href="/checkin" className="shrink-0 bg-teal/20 text-teal text-sm font-semibold px-4 py-2 rounded-xl border border-teal/30 hover:bg-teal/30 transition-colors">
-              Checked in today
-            </a>
-          )}
+          {!todayCheckin?.checked_in
+            ? <a href="/checkin" className="shrink-0 bg-saffron text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-saffron/90 transition-colors">Check in today</a>
+            : <a href="/checkin" className="shrink-0 bg-teal/20 text-teal text-sm font-semibold px-4 py-2 rounded-xl border border-teal/30 hover:bg-teal/30 transition-colors">Checked in today</a>
+          }
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
@@ -136,24 +126,9 @@ export default function DashboardPage() {
                 <div className="text-white/40 text-xs">Hours studied</div>
                 <div className="text-white font-bold text-lg">{todayCheckin.study_hours_logged}h</div>
               </div>
-              {todayCheckin.mood && (
-                <div>
-                  <div className="text-white/40 text-xs">Mood</div>
-                  <div className="text-white font-bold text-lg">{todayCheckin.mood}</div>
-                </div>
-              )}
-              {todayCheckin.mock_attempted && (
-                <div>
-                  <div className="text-white/40 text-xs">Mock score</div>
-                  <div className="text-white font-bold text-lg">{todayCheckin.mock_score}%</div>
-                </div>
-              )}
-              {todayCheckin.topics_covered?.length > 0 && (
-                <div>
-                  <div className="text-white/40 text-xs">Topics covered</div>
-                  <div className="text-white text-sm">{todayCheckin.topics_covered.join(', ')}</div>
-                </div>
-              )}
+              {todayCheckin.mood && <div><div className="text-white/40 text-xs">Mood</div><div className="text-white font-bold text-lg">{todayCheckin.mood}</div></div>}
+              {todayCheckin.mock_attempted && <div><div className="text-white/40 text-xs">Mock score</div><div className="text-white font-bold text-lg">{todayCheckin.mock_score}%</div></div>}
+              {todayCheckin.topics_covered?.length > 0 && <div><div className="text-white/40 text-xs">Topics covered</div><div className="text-white text-sm">{todayCheckin.topics_covered.join(', ')}</div></div>}
             </div>
           </div>
         )}
@@ -161,53 +136,20 @@ export default function DashboardPage() {
         <div className="mb-6">
           <h2 className="text-white font-semibold text-lg mb-4">Quick links</h2>
           <div className="space-y-3">
-
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-8 h-8 rounded-full bg-saffron/20 flex items-center justify-center text-saffron font-bold text-sm">1</div>
-                <div>
-                  <div className="text-white font-medium text-sm">Complete your profile</div>
-                  <div className="text-white/40 text-xs mt-0.5">Tell us about yourself so we can personalise everything</div>
+            {links.map(link => (
+              <div key={link.num} className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${link.highlight ? 'bg-saffron/20 text-saffron' : 'bg-white/10 text-white/50'}`}>{link.num}</div>
+                  <div>
+                    <div className="text-white font-medium text-sm">{link.title}</div>
+                    <div className="text-white/40 text-xs mt-0.5">{link.desc}</div>
+                  </div>
                 </div>
+                <a href={link.href} className="text-saffron text-sm font-medium hover:underline shrink-0">
+                  {link.num === '4' ? (todayCheckin?.checked_in ? 'Update' : 'Check in') : link.label}
+                </a>
               </div>
-              <a href="/onboarding" className="text-saffron text-sm font-medium hover:underline shrink-0">Edit</a>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 font-bold text-sm">2</div>
-                <div>
-                  <div className="text-white font-medium text-sm">Exam recommendations</div>
-                  <div className="text-white/40 text-xs mt-0.5">Your personalised exam shortlist</div>
-                </div>
-              </div>
-              <a href="/recommendations" className="text-saffron text-sm font-medium hover:underline shrink-0">View</a>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 font-bold text-sm">3</div>
-                <div>
-                  <div className="text-white font-medium text-sm">Study plan</div>
-                  <div className="text-white/40 text-xs mt-0.5">Your daily and weekly schedule</div>
-                </div>
-              </div>
-              <a href="/studyplan" className="text-saffron text-sm font-medium hover:underline shrink-0">View</a>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 font-bold text-sm">4</div>
-                <div>
-                  <div className="text-white font-medium text-sm">Daily check-in</div>
-                  <div className="text-white/40 text-xs mt-0.5">Log your hours, mood, and mock scores</div>
-                </div>
-              </div>
-              <a href="/checkin" className="text-saffron text-sm font-medium hover:underline shrink-0">
-                {todayCheckin?.checked_in ? 'Update' : 'Check in'}
-              </a>
-            </div>
-
+            ))}
           </div>
         </div>
 
