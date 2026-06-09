@@ -6,23 +6,33 @@ import { createClient } from '../../lib/supabase'
 
 export default function DashboardPage() {
   const [user, setUser] = useState(null)
+  const [stats, setStats] = useState(null)
+  const [exams, setExams] = useState([])
+  const [todayCheckin, setTodayCheckin] = useState(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
+  const today = new Date().toISOString().split('T')[0]
+
   useEffect(() => {
-    async function getUser() {
+    async function load() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/login'); return }
+      setUser(user)
 
-      if (!user) {
-        router.push('/login')
-      } else {
-        setUser(user)
-        setLoading(false)
-      }
+      const [statsRes, examsRes, checkinRes] = await Promise.all([
+        supabase.from('study_stats').select('*').eq('user_id', user.id).single(),
+        supabase.from('exam_recommendations').select('exam_name, fit_score').eq('user_id', user.id).eq('is_active', true),
+        supabase.from('daily_checkins').select('*').eq('user_id', user.id).eq('date', today).single(),
+      ])
+
+      setStats(statsRes.data)
+      setExams(examsRes.data || [])
+      setTodayCheckin(checkinRes.data)
+      setLoading(false)
     }
-
-    getUser()
+    load()
   }, [])
 
   async function handleLogout() {
@@ -34,7 +44,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <main style={{ backgroundColor: 'var(--ink)' }} className="min-h-screen flex items-center justify-center">
-        <div className="text-white/50 text-sm">Loading...</div>
+        <div className="w-10 h-10 border-2 border-saffron border-t-transparent rounded-full animate-spin" />
       </main>
     )
   }
@@ -42,7 +52,6 @@ export default function DashboardPage() {
   return (
     <main style={{ backgroundColor: 'var(--ink)' }} className="min-h-screen">
 
-      {/* Top nav */}
       <nav className="border-b border-white/10 px-6 py-4 md:px-16 flex items-center justify-between">
         <div>
           <span className="text-saffron font-bold text-xl">JOIN</span>
@@ -52,51 +61,108 @@ export default function DashboardPage() {
           <span className="text-white/50 text-sm hidden sm:block">
             {user?.user_metadata?.full_name || user?.email}
           </span>
-          <button
-            onClick={handleLogout}
-            className="text-white/50 text-sm px-4 py-2 rounded-lg border border-white/10 hover:border-white/30 transition-colors"
-          >
+          <button onClick={handleLogout} className="text-white/50 text-sm px-4 py-2 rounded-lg border border-white/10 hover:border-white/30 transition-colors">
             Log out
           </button>
         </div>
       </nav>
 
-      {/* Dashboard body */}
       <div className="px-6 py-12 md:px-16 max-w-5xl">
 
-        {/* Welcome */}
-        <div className="mb-12">
-          <h1 className="text-white text-3xl font-bold mb-2">
-            Welcome, {user?.user_metadata?.full_name?.split(' ')[0] || 'Aspirant'} 👋
-          </h1>
-          <p className="text-white/50">Your AI Chief of Staff is ready. Let us get you started.</p>
+        <div className="mb-10 flex items-start justify-between">
+          <div>
+            <h1 className="text-white text-3xl font-bold mb-2">
+              Welcome back, {user?.user_metadata?.full_name?.split(' ')[0] || 'Aspirant'} 👋
+            </h1>
+            <p className="text-white/50">
+              {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </p>
+          </div>
+          {!todayCheckin?.checked_in && (
+            <a href="/checkin" className="shrink-0 bg-saffron text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-saffron/90 transition-colors">
+              Check in today
+            </a>
+          )}
+          {todayCheckin?.checked_in && (
+            <a href="/checkin" className="shrink-0 bg-teal/20 text-teal text-sm font-semibold px-4 py-2 rounded-xl border border-teal/30 hover:bg-teal/30 transition-colors">
+              Checked in today
+            </a>
+          )}
         </div>
 
-        {/* Status cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <div className="text-white/40 text-xs font-medium tracking-widest mb-3">ACTIVE EXAMS</div>
-            <div className="text-white text-3xl font-bold">0</div>
-            <div className="text-white/40 text-sm mt-1">of 3 maximum</div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
+            <div className="text-saffron text-2xl font-bold">{exams.length}</div>
+            <div className="text-white/40 text-xs mt-1">Active exams</div>
           </div>
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <div className="text-white/40 text-xs font-medium tracking-widest mb-3">STUDY STREAK</div>
-            <div className="text-white text-3xl font-bold">0</div>
-            <div className="text-white/40 text-sm mt-1">days in a row</div>
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
+            <div className="text-saffron text-2xl font-bold">{stats?.current_streak || 0}</div>
+            <div className="text-white/40 text-xs mt-1">Day streak</div>
           </div>
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <div className="text-white/40 text-xs font-medium tracking-widest mb-3">HOURS LOGGED</div>
-            <div className="text-white text-3xl font-bold">0</div>
-            <div className="text-white/40 text-sm mt-1">total hours</div>
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
+            <div className="text-saffron text-2xl font-bold">{stats?.total_hours?.toFixed(0) || 0}</div>
+            <div className="text-white/40 text-xs mt-1">Hours logged</div>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
+            <div className="text-saffron text-2xl font-bold">{stats?.total_days_studied || 0}</div>
+            <div className="text-white/40 text-xs mt-1">Days studied</div>
           </div>
         </div>
 
-        {/* Next steps */}
+        {exams.length > 0 && (
+          <div className="mb-10">
+            <h2 className="text-white font-semibold text-lg mb-4">Your active exams</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {exams.map((exam, i) => (
+                <div key={exam.exam_name} className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between">
+                  <div>
+                    <div className="text-white font-medium text-sm">{exam.exam_name}</div>
+                    {i === 0 && <div className="text-saffron text-xs mt-0.5">Best fit</div>}
+                  </div>
+                  <div className="w-10 h-10 rounded-full border-2 border-saffron flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">{exam.fit_score}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {todayCheckin?.checked_in && (
+          <div className="mb-10 bg-teal/5 border border-teal/20 rounded-2xl p-5">
+            <div className="text-teal text-xs font-bold tracking-widest mb-3">TODAY AT A GLANCE</div>
+            <div className="flex items-center gap-6 flex-wrap">
+              <div>
+                <div className="text-white/40 text-xs">Hours studied</div>
+                <div className="text-white font-bold text-lg">{todayCheckin.study_hours_logged}h</div>
+              </div>
+              {todayCheckin.mood && (
+                <div>
+                  <div className="text-white/40 text-xs">Mood</div>
+                  <div className="text-white font-bold text-lg">{todayCheckin.mood}</div>
+                </div>
+              )}
+              {todayCheckin.mock_attempted && (
+                <div>
+                  <div className="text-white/40 text-xs">Mock score</div>
+                  <div className="text-white font-bold text-lg">{todayCheckin.mock_score}%</div>
+                </div>
+              )}
+              {todayCheckin.topics_covered?.length > 0 && (
+                <div>
+                  <div className="text-white/40 text-xs">Topics covered</div>
+                  <div className="text-white text-sm">{todayCheckin.topics_covered.join(', ')}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="mb-6">
-          <h2 className="text-white font-semibold text-lg mb-4">Get started</h2>
+          <h2 className="text-white font-semibold text-lg mb-4">Quick links</h2>
           <div className="space-y-3">
 
-            <div className="bg-white/5 border border-saffron/30 rounded-2xl p-5 flex items-center justify-between">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-8 h-8 rounded-full bg-saffron/20 flex items-center justify-center text-saffron font-bold text-sm">1</div>
                 <div>
@@ -104,34 +170,41 @@ export default function DashboardPage() {
                   <div className="text-white/40 text-xs mt-0.5">Tell us about yourself so we can personalise everything</div>
                 </div>
               </div>
-              <a href="/onboarding" className="text-saffron text-sm font-medium hover:underline shrink-0">
-                Start →
-              </a>
+              <a href="/onboarding" className="text-saffron text-sm font-medium hover:underline shrink-0">Edit</a>
             </div>
 
             <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 font-bold text-sm">2</div>
                 <div>
-                  <div className="text-white font-medium text-sm">Get your exam recommendations</div>
-                  <div className="text-white/40 text-xs mt-0.5">AI picks your best 3 exams based on your profile</div>
+                  <div className="text-white font-medium text-sm">Exam recommendations</div>
+                  <div className="text-white/40 text-xs mt-0.5">Your personalised exam shortlist</div>
                 </div>
               </div>
-              <a href="/recommendations" className="text-saffron text-sm font-medium hover:underline shrink-0">
-                View
-              </a>
+              <a href="/recommendations" className="text-saffron text-sm font-medium hover:underline shrink-0">View</a>
             </div>
 
             <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 font-bold text-sm">3</div>
                 <div>
-                  <div className="text-white font-medium text-sm">Generate your study plan</div>
-                  <div className="text-white/40 text-xs mt-0.5">A living daily plan built around your schedule</div>
+                  <div className="text-white font-medium text-sm">Study plan</div>
+                  <div className="text-white/40 text-xs mt-0.5">Your daily and weekly schedule</div>
                 </div>
               </div>
-              <a href="/studyplan" className="text-saffron text-sm font-medium hover:underline shrink-0">
-                View
+              <a href="/studyplan" className="text-saffron text-sm font-medium hover:underline shrink-0">View</a>
+            </div>
+
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 font-bold text-sm">4</div>
+                <div>
+                  <div className="text-white font-medium text-sm">Daily check-in</div>
+                  <div className="text-white/40 text-xs mt-0.5">Log your hours, mood, and mock scores</div>
+                </div>
+              </div>
+              <a href="/checkin" className="text-saffron text-sm font-medium hover:underline shrink-0">
+                {todayCheckin?.checked_in ? 'Update' : 'Check in'}
               </a>
             </div>
 
