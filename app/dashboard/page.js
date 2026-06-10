@@ -51,8 +51,9 @@ export default function DashboardPage() {
     { num: '2', title: 'Exam recommendations', desc: 'Your personalised exam shortlist', href: '/recommendations', label: 'View', highlight: false },
     { num: '3', title: 'Study plan', desc: 'Your daily and weekly schedule', href: '/studyplan', label: 'View', highlight: false },
     { num: '4', title: 'Daily check-in', desc: 'Log your hours, mood, and mock scores', href: '/checkin', label: null, highlight: false },
-    { num: '5', title: 'Exam tracker', desc: 'Notifications, deadlines, admit cards, results', href: '/notifications', label: 'View', highlight: false },
-    { num: '6', title: 'Subscription', desc: 'Manage your plan', href: '/pricing', label: 'View', highlight: false },
+    { num: '5', title: 'Current Affairs', desc: 'Daily news with MCQs for exam prep', href: '/currentaffairs', label: 'Read today', highlight: false },
+    { num: '6', title: 'Exam tracker', desc: 'Notifications, deadlines, admit cards, results', href: '/notifications', label: 'View', highlight: false },
+    { num: '7', title: 'Subscription', desc: 'Manage your plan', href: '/pricing', label: 'View', highlight: false },
   ]
 
   return (
