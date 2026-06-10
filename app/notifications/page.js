@@ -18,8 +18,7 @@ function getDaysLeft(date) {
   today.setHours(0, 0, 0, 0)
   const target = new Date(date)
   target.setHours(0, 0, 0, 0)
-  const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24))
-  return diff
+  return Math.ceil((target - today) / (1000 * 60 * 60 * 24))
 }
 
 function DaysLeftBadge({ date }) {
@@ -38,7 +37,9 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [fetching, setFetching] = useState(false)
   const [error, setError] = useState('')
+  const [fetchMessage, setFetchMessage] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [filter, setFilter] = useState('all')
   const [exams, setExams] = useState([])
@@ -66,7 +67,6 @@ export default function NotificationsPage() {
         .eq('is_active', true)
 
       setExams(examsData || [])
-
       if (examsData && examsData.length > 0) {
         setForm(prev => ({ ...prev, exam_name: examsData[0].exam_name }))
       }
@@ -75,7 +75,7 @@ export default function NotificationsPage() {
         .from('exam_notifications')
         .select('*')
         .eq('user_id', user.id)
-        .order('important_date', { ascending: true })
+        .order('important_date', { ascending: true, nullsFirst: false })
 
       setNotifications(notifs || [])
       setLoading(false)
@@ -83,11 +83,50 @@ export default function NotificationsPage() {
     load()
   }, [])
 
-  async function handleAdd() {
-    if (!form.title || !form.exam_name) {
-      setError('Please fill in exam name and title.')
-      return
+  async function handleAutoFetch() {
+    if (!exams.length) { setError('No active exams found. Please complete exam recommendations first.'); return }
+    setFetching(true)
+    setError('')
+    setFetchMessage('Searching the web for latest notifications...')
+
+    try {
+      const response = await fetch('/api/fetchnotifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ exams: exams.map(e => e.exam_name) }),
+      })
+
+      const data = await response.json()
+      if (data.error) { setError(data.error); setFetching(false); setFetchMessage(''); return }
+
+      const supabase = createClient()
+      let added = 0
+
+      for (const notif of data.notifications) {
+        const { error: insertError } = await supabase
+          .from('exam_notifications')
+          .insert({ ...notif, user_id: user.id })
+
+        if (!insertError) added++
+      }
+
+      const { data: updated } = await supabase
+        .from('exam_notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('important_date', { ascending: true, nullsFirst: false })
+
+      setNotifications(updated || [])
+      setFetchMessage(`Added ${added} new notifications from the web.`)
+      setTimeout(() => setFetchMessage(''), 4000)
+    } catch (e) {
+      setError('Failed to fetch notifications. Please try again.')
     }
+    setFetching(false)
+  }
+
+  async function handleAdd() {
+    if (!form.title || !form.exam_name) { setError('Please fill in exam name and title.'); return }
     setSaving(true)
     setError('')
     const supabase = createClient()
@@ -106,14 +145,7 @@ export default function NotificationsPage() {
         if (!b.important_date) return -1
         return new Date(a.important_date) - new Date(b.important_date)
       }))
-      setForm({
-        exam_name: exams[0]?.exam_name || '',
-        notification_type: 'notification',
-        title: '',
-        description: '',
-        important_date: '',
-        url: '',
-      })
+      setForm({ exam_name: exams[0]?.exam_name || '', notification_type: 'notification', title: '', description: '', important_date: '', url: '' })
       setShowForm(false)
     }
     setSaving(false)
@@ -170,18 +202,40 @@ export default function NotificationsPage() {
               <h1 className="text-white text-2xl font-bold mb-1">Exam tracker</h1>
               <p className="text-white/50 text-sm">Track notifications, deadlines, admit cards, and results</p>
             </div>
-            <button
-              onClick={() => setShowForm(!showForm)}
-              className="shrink-0 bg-saffron text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-saffron/90 transition-colors"
-            >
-              {showForm ? 'Cancel' : '+ Add'}
-            </button>
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={handleAutoFetch}
+                disabled={fetching}
+                className="bg-saffron text-white text-xs font-semibold px-3 py-2 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50"
+              >
+                {fetching ? 'Searching...' : 'Auto-fetch'}
+              </button>
+              <button
+                onClick={() => setShowForm(!showForm)}
+                className="bg-white/10 text-white text-xs font-semibold px-3 py-2 rounded-xl hover:bg-white/20 transition-colors"
+              >
+                {showForm ? 'Cancel' : '+ Add'}
+              </button>
+            </div>
           </div>
         </div>
 
+        {fetchMessage && (
+          <div className="mb-6 bg-teal/10 border border-teal/20 rounded-xl px-4 py-3">
+            <p className="text-teal text-sm">{fetchMessage}</p>
+          </div>
+        )}
+
+        {fetching && (
+          <div className="mb-6 bg-white/5 border border-white/10 rounded-xl px-4 py-4 flex items-center gap-3">
+            <div className="w-5 h-5 border-2 border-saffron border-t-transparent rounded-full animate-spin shrink-0" />
+            <p className="text-white/50 text-sm">Searching the web for latest exam notifications... This takes about 20 seconds.</p>
+          </div>
+        )}
+
         {showForm && (
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
-            <h2 className="text-white font-semibold mb-5">Add new entry</h2>
+            <h2 className="text-white font-semibold mb-5">Add manually</h2>
             <div className="space-y-4">
               <div>
                 <label className="text-white/70 text-sm block mb-2">Exam</label>
@@ -213,20 +267,20 @@ export default function NotificationsPage() {
                 <input type="url" value={form.url} onChange={e => setForm(p => ({ ...p, url: e.target.value }))} placeholder="https://ssc.nic.in" className={inputClass} />
               </div>
             </div>
-
             {error && (
               <div className="mt-4 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
                 <p className="text-red-400 text-sm">{error}</p>
               </div>
             )}
-
-            <button
-              onClick={handleAdd}
-              disabled={saving}
-              className="w-full mt-5 bg-saffron text-white font-semibold py-3 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50"
-            >
+            <button onClick={handleAdd} disabled={saving} className="w-full mt-5 bg-saffron text-white font-semibold py-3 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50">
               {saving ? 'Saving...' : 'Save entry'}
             </button>
+          </div>
+        )}
+
+        {error && !showForm && (
+          <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+            <p className="text-red-400 text-sm">{error}</p>
           </div>
         )}
 
@@ -235,11 +289,7 @@ export default function NotificationsPage() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize ${
-                filter === f
-                  ? 'bg-saffron text-white'
-                  : 'bg-white/5 text-white/50 hover:bg-white/10'
-              }`}
+              className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize ${filter === f ? 'bg-saffron text-white' : 'bg-white/5 text-white/50 hover:bg-white/10'}`}
             >
               {f.replace('_', ' ')}
             </button>
@@ -249,7 +299,10 @@ export default function NotificationsPage() {
         {filtered.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-white/30 text-sm mb-2">No entries yet.</p>
-            <p className="text-white/20 text-xs">Click "+ Add" to track an exam notification, deadline, or admit card.</p>
+            <p className="text-white/20 text-xs mb-6">Click Auto-fetch to search for latest exam notifications automatically.</p>
+            <button onClick={handleAutoFetch} disabled={fetching} className="bg-saffron text-white text-sm font-semibold px-6 py-3 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50">
+              {fetching ? 'Searching...' : 'Auto-fetch notifications'}
+            </button>
           </div>
         ) : (
           <div className="space-y-3">
@@ -264,8 +317,8 @@ export default function NotificationsPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
-                        {n.is_pinned && <span className="text-saffron text-xs">📌</span>}
-                        {!n.is_read && <span className="w-2 h-2 rounded-full bg-saffron shrink-0 mt-0.5" />}
+                        {n.is_pinned && <span className="text-saffron text-xs">pinned</span>}
+                        {!n.is_read && <span className="w-2 h-2 rounded-full bg-saffron shrink-0" />}
                         <span className={`text-xs px-2 py-0.5 rounded-full border ${type?.bg || 'bg-white/10 border-white/10'} ${type?.color || 'text-white/50'}`}>
                           {type?.label || n.notification_type}
                         </span>
@@ -287,21 +340,9 @@ export default function NotificationsPage() {
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-2 shrink-0">
-                      <button
-                        onClick={e => { e.stopPropagation(); togglePin(n.id, n.is_pinned) }}
-                        className="text-white/30 hover:text-saffron text-xs transition-colors"
-                        title="Pin"
-                      >
-                        📌
-                      </button>
-                      <button
-                        onClick={e => { e.stopPropagation(); deleteNotif(n.id) }}
-                        className="text-white/30 hover:text-red-400 text-xs transition-colors"
-                        title="Delete"
-                      >
-                        ✕
-                      </button>
+                    <div className="flex gap-3 shrink-0">
+                      <button onClick={e => { e.stopPropagation(); togglePin(n.id, n.is_pinned) }} className="text-white/30 hover:text-saffron text-xs transition-colors">pin</button>
+                      <button onClick={e => { e.stopPropagation(); deleteNotif(n.id) }} className="text-white/30 hover:text-red-400 text-xs transition-colors">delete</button>
                     </div>
                   </div>
                 </div>
