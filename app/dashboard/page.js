@@ -53,7 +53,8 @@ export default function DashboardPage() {
     { num: '4', title: 'Daily check-in', desc: 'Log your hours, mood, and mock scores', href: '/checkin', label: null, highlight: false },
     { num: '5', title: 'Current Affairs', desc: 'Daily news with MCQs for exam prep', href: '/currentaffairs', label: 'Read today', highlight: false },
     { num: '6', title: 'Exam tracker', desc: 'Notifications, deadlines, admit cards, results', href: '/notifications', label: 'View', highlight: false },
-    { num: '7', title: 'Subscription', desc: 'Manage your plan', href: '/pricing', label: 'View', highlight: false },
+    { num: '7', title: 'Answer Writing', desc: 'Advanced Track — evaluate and improve your answers', href: '/answerwriting', label: 'Practice', highlight: false },
+    { num: '8', title: 'Subscription', desc: 'Manage your plan', href: '/pricing', label: 'View', highlight: false },
   ]
 
   return (
