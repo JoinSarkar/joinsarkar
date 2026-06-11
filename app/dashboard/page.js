@@ -10,6 +10,7 @@ export default function DashboardPage() {
   const [exams, setExams] = useState([])
   const [todayCheckin, setTodayCheckin] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
   const router = useRouter()
   const today = new Date().toISOString().split('T')[0]
 
@@ -27,6 +28,14 @@ export default function DashboardPage() {
       setStats(statsRes.data)
       setExams(examsRes.data || [])
       setTodayCheckin(checkinRes.data)
+
+      const { data: adminCheck } = await supabase
+        .from('admin_users')
+        .select('id')
+        .eq('id', user.id)
+        .single()
+      if (adminCheck) setIsAdmin(true)
+
       setLoading(false)
     }
     load()
@@ -45,6 +54,10 @@ export default function DashboardPage() {
       </main>
     )
   }
+
+  const adminLinks = isAdmin ? [
+    { num: 'A', title: 'Admin Dashboard', desc: 'Manage content, users, and cache', href: '/admin', label: 'Open', highlight: true },
+  ] : []
 
   const links = [
     { num: '1', title: 'Complete your profile', desc: 'Tell us about yourself so we can personalise everything', href: '/onboarding', label: 'Edit', highlight: true },
@@ -138,6 +151,18 @@ export default function DashboardPage() {
         <div className="mb-6">
           <h2 className="text-white font-semibold text-lg mb-4">Quick links</h2>
           <div className="space-y-3">
+            {adminLinks.map(link => (
+              <div key={link.num} className="bg-saffron/10 border border-saffron/30 rounded-2xl p-5 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 rounded-full bg-saffron/20 flex items-center justify-center text-saffron font-bold text-sm">{link.num}</div>
+                  <div>
+                    <div className="text-white font-medium text-sm">{link.title}</div>
+                    <div className="text-white/40 text-xs mt-0.5">{link.desc}</div>
+                  </div>
+                </div>
+                <a href={link.href} className="text-saffron text-sm font-medium hover:underline shrink-0">{link.label}</a>
+              </div>
+            ))}
             {links.map(link => (
               <div key={link.num} className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center justify-between">
                 <div className="flex items-center gap-4">

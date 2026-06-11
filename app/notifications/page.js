@@ -93,11 +93,18 @@ export default function NotificationsPage() {
       const response = await fetch('/api/fetchnotifications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ exams: exams.map(e => e.exam_name) }),
+        body: JSON.stringify({ exams: exams.map(e => e.exam_name), userId: user.id }),
       })
 
       const data = await response.json()
       if (data.error) { setError(data.error); setFetching(false); setFetchMessage(''); return }
+
+      if (data.cached) {
+        setFetchMessage(data.message || 'Notifications already fetched recently.')
+        setTimeout(() => setFetchMessage(''), 5000)
+        setFetching(false)
+        return
+      }
 
       const supabase = createClient()
       let added = 0
