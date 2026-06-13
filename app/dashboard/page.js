@@ -60,6 +60,7 @@ export default function DashboardPage() {
   ] : []
 
   const links = [
+    { num: '0', title: 'War Room', desc: 'Daily briefing, XP, ranks, and consistency heatmap', href: '/warroom', label: 'Enter', highlight: true },
     { num: '1', title: 'Complete your profile', desc: 'Tell us about yourself so we can personalise everything', href: '/onboarding', label: 'Edit', highlight: true },
     { num: '2', title: 'Exam recommendations', desc: 'Your personalised exam shortlist', href: '/recommendations', label: 'View', highlight: false },
     { num: '3', title: 'Study plan', desc: 'Your daily and weekly schedule', href: '/studyplan', label: 'View', highlight: false },

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
+import { calculateXPForCheckin, checkMilestones, MILESTONES } from '../../lib/gameEngine'
 
 const MOODS = [
   { emoji: '🔥', label: 'Focused' },
@@ -106,6 +107,37 @@ export default function CheckinPage() {
       .upsert(checkinData)
 
     if (checkinError) { setError('Failed to save check-in.'); setSaving(false); return }
+
+    // Award XP
+    const xpEarned = calculateXPForCheckin(
+      hoursToday,
+      form.mock_attempted,
+      parseInt(form.mock_score) || 0,
+      newStreak
+    )
+
+    const newXP = (stats?.xp || 0) + xpEarned
+
+    // Check milestones
+    const newStatsForMilestone = {
+      total_hours: newTotal,
+      current_streak: newStreak,
+      total_days_studied: newDays,
+    }
+    const earnedMilestoneKeys = checkMilestones(newStatsForMilestone, stats)
+
+    // Save milestones
+    for (const key of earnedMilestoneKeys) {
+      const milestone = MILESTONES.find(m => m.key === key)
+      if (milestone) {
+        await supabase.from('milestones').upsert({
+          user_id: user.id,
+          milestone_key: key,
+          milestone_title: milestone.title,
+          milestone_desc: milestone.desc,
+        })
+      }
+    }
 
     const hoursToday = parseFloat(form.study_hours_logged) || 0
     const lastDate = stats?.last_checkin_date
