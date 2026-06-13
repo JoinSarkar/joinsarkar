@@ -68,7 +68,8 @@ export default function DashboardPage() {
     { num: '5', title: 'Current Affairs', desc: 'Daily news with MCQs for exam prep', href: '/currentaffairs', label: 'Read today', highlight: false },
     { num: '6', title: 'Exam tracker', desc: 'Notifications, deadlines, admit cards, results', href: '/notifications', label: 'View', highlight: false },
     { num: '7', title: 'Answer Writing', desc: 'Advanced Track — evaluate and improve your answers', href: '/answerwriting', label: 'Practice', highlight: false },
-    { num: '8', title: 'Subscription', desc: 'Manage your plan', href: '/pricing', label: 'View', highlight: false },
+    { num: '8', title: 'Weekly Review', desc: 'Your weekly performance analysis', href: '/weeklyreview', label: 'View', highlight: false },
+    { num: '9', title: 'Subscription', desc: 'Manage your plan', href: '/pricing', label: 'View', highlight: false },
   ]
 
   return (
