@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
@@ -31,7 +33,7 @@ function MCQCard({ mcq }) {
             else style = 'bg-white/5 border-white/10 text-white/30'
           }
           return (
-            <button
+            <button type="button"
               key={key}
               onClick={() => !selected && setSelected(key)}
               className={`w-full text-left px-3 py-2 rounded-lg border text-xs transition-colors ${style}`}
@@ -142,10 +144,10 @@ export default function CurrentAffairsPage() {
       <div className="max-w-2xl mx-auto">
 
         <div className="mb-10">
-          <a href="/dashboard">
+          <Link href="/dashboard">
             <span className="text-saffron font-bold text-xl">JOIN</span>
             <span className="text-white font-bold text-xl"> SARKAR</span>
-          </a>
+          </Link>
           <div className="mt-6 flex items-center justify-between">
             <div>
               <h1 className="text-white text-2xl font-bold mb-1">Current Affairs</h1>
@@ -153,7 +155,7 @@ export default function CurrentAffairsPage() {
                 {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
               </p>
             </div>
-            <button
+            <button type="button"
               onClick={() => generateCurrentAffairs(user)}
               className="text-white/40 text-xs border border-white/10 px-3 py-2 rounded-lg hover:border-white/30 transition-colors shrink-0"
             >
@@ -165,13 +167,13 @@ export default function CurrentAffairsPage() {
         {error && (
           <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
             <p className="text-red-400 text-sm">{error}</p>
-            <button onClick={() => generateCurrentAffairs(user)} className="text-saffron text-xs mt-2 hover:underline">Try again</button>
+            <button type="button" onClick={() => generateCurrentAffairs(user)} className="text-saffron text-xs mt-2 hover:underline">Try again</button>
           </div>
         )}
 
         <div className="flex gap-2 overflow-x-auto pb-2 mb-6">
           {categories.map(c => (
-            <button
+            <button type="button"
               key={c}
               onClick={() => setFilter(c)}
               className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${filter === c ? 'bg-saffron text-white' : 'bg-white/5 text-white/50 hover:bg-white/10'}`}
@@ -193,7 +195,7 @@ export default function CurrentAffairsPage() {
                   </div>
                   <h3 className="text-white font-semibold text-sm leading-relaxed">{item.headline}</h3>
                 </div>
-                <button
+                <button type="button"
                   onClick={() => setExpandedItem(expandedItem === index ? null : index)}
                   className="text-white/30 hover:text-white text-xs shrink-0 transition-colors"
                 >

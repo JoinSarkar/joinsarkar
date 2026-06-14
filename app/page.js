@@ -1,3 +1,4 @@
+import Link from 'next/link'
 export default function Home() {
   return (
     <main style={{ backgroundColor: 'var(--ink)' }} className="min-h-screen">
@@ -8,12 +9,12 @@ export default function Home() {
           <span className="text-white font-bold text-xl tracking-wide"> SARKAR</span>
         </div>
         <div className="flex gap-3">
-          <a href="/login" className="text-white text-sm px-4 py-2 rounded-lg border border-white/20 hover:border-white/50 transition-colors">
+          <Link href="/login" className="text-white text-sm px-4 py-2 rounded-lg border border-white/20 hover:border-white/50 transition-colors">
             Log in
-          </a>
-          <a href="/signup" className="text-white text-sm px-4 py-2 rounded-lg bg-saffron hover:bg-saffron/90 transition-colors">
+          </Link>
+          <Link href="/signup" className="text-white text-sm px-4 py-2 rounded-lg bg-saffron hover:bg-saffron/90 transition-colors">
             Get started
-          </a>
+          </Link>
         </div>
       </nav>
 
@@ -32,9 +33,9 @@ export default function Home() {
             Exam recommendations, study plans, mock tests, and daily accountability — all in one place.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
-            <a href="/signup" className="bg-saffron text-white text-base font-semibold px-8 py-4 rounded-xl hover:bg-saffron/90 transition-colors text-center">
+            <Link href="/signup" className="bg-saffron text-white text-base font-semibold px-8 py-4 rounded-xl hover:bg-saffron/90 transition-colors text-center">
               Start for free
-            </a>
+            </Link>
             <a href="#how-it-works" className="text-white/70 text-base px-8 py-4 rounded-xl border border-white/10 hover:border-white/30 transition-colors text-center">
               See how it works
             </a>
@@ -98,9 +99,9 @@ export default function Home() {
               <li className="flex items-center gap-2 text-white/70 text-sm"><span className="text-teal">✓</span> Daily current affairs</li>
               <li className="flex items-center gap-2 text-white/70 text-sm"><span className="text-teal">✓</span> Accountability tracking</li>
             </ul>
-            <a href="/signup" className="block text-center py-3 rounded-xl font-semibold text-sm bg-white/10 text-white hover:bg-white/20 transition-colors">
+            <Link href="/signup" className="block text-center py-3 rounded-xl font-semibold text-sm bg-white/10 text-white hover:bg-white/20 transition-colors">
               Get started
-            </a>
+            </Link>
           </div>
           <div className="bg-saffron/10 border border-saffron/40 rounded-2xl p-6">
             <div className="text-saffron text-xs font-bold tracking-widest mb-4">MOST POPULAR</div>
@@ -117,9 +118,9 @@ export default function Home() {
               <li className="flex items-center gap-2 text-white/70 text-sm"><span className="text-teal">✓</span> Interview preparation</li>
               <li className="flex items-center gap-2 text-white/70 text-sm"><span className="text-teal">✓</span> Priority support</li>
             </ul>
-            <a href="/signup" className="block text-center py-3 rounded-xl font-semibold text-sm bg-saffron text-white hover:bg-saffron/90 transition-colors">
+            <Link href="/signup" className="block text-center py-3 rounded-xl font-semibold text-sm bg-saffron text-white hover:bg-saffron/90 transition-colors">
               Get started
-            </a>
+            </Link>
           </div>
         </div>
       </section>

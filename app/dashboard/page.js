@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
@@ -42,6 +44,8 @@ export default function DashboardPage() {
   }, [])
 
   async function handleLogout() {
+    if (loading) return
+    setLoading(true)
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/')
@@ -81,7 +85,7 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-white/50 text-sm hidden sm:block">{user?.user_metadata?.full_name || user?.email}</span>
-          <button onClick={handleLogout} className="text-white/50 text-sm px-4 py-2 rounded-lg border border-white/10 hover:border-white/30 transition-colors">Log out</button>
+          <button type="button" onClick={handleLogout} className="text-white/50 text-sm px-4 py-2 rounded-lg border border-white/10 hover:border-white/30 transition-colors">Log out</button>
         </div>
       </nav>
 
@@ -92,8 +96,8 @@ export default function DashboardPage() {
             <p className="text-white/50">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
           </div>
           {!todayCheckin?.checked_in
-            ? <a href="/checkin" className="shrink-0 bg-saffron text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-saffron/90 transition-colors">Check in today</a>
-            : <a href="/checkin" className="shrink-0 bg-teal/20 text-teal text-sm font-semibold px-4 py-2 rounded-xl border border-teal/30 hover:bg-teal/30 transition-colors">Checked in today</a>
+            ? <Link href="/checkin" className="shrink-0 bg-saffron text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-saffron/90 transition-colors">Check in today</Link>
+            : <Link href="/checkin" className="shrink-0 bg-teal/20 text-teal text-sm font-semibold px-4 py-2 rounded-xl border border-teal/30 hover:bg-teal/30 transition-colors">Checked in today</Link>
           }
         </div>
 

@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
@@ -71,6 +73,7 @@ export default function AnswerWritingPage() {
   }, [])
 
   async function handleEvaluate() {
+    if (evaluating) return
     if (!question.trim()) { setError('Please enter a question.'); return }
     if (!answer.trim()) { setError('Please write your answer first.'); return }
     if (answer.trim().split(/\s+/).length < 20) { setError('Answer is too short. Write at least 20 words.'); return }
@@ -96,6 +99,7 @@ export default function AnswerWritingPage() {
   }
 
   async function handleModelAnswer() {
+    if (generatingModel) return
     if (!question.trim()) { setError('Please enter a question first.'); return }
     setGeneratingModel(true)
     setError('')
@@ -136,9 +140,9 @@ export default function AnswerWritingPage() {
           <p className="text-white/50 text-sm mb-8 leading-relaxed">
             Answer writing evaluation and model answer generation is available exclusively on the Advanced Track (Rs 499/month) for UPSC, State PCS, and Judiciary aspirants.
           </p>
-          <a href="/pricing" className="bg-saffron text-white font-semibold px-8 py-3 rounded-xl hover:bg-saffron/90 transition-colors">
+          <Link href="/pricing" className="bg-saffron text-white font-semibold px-8 py-3 rounded-xl hover:bg-saffron/90 transition-colors">
             Upgrade to Advanced Track
-          </a>
+          </Link>
         </div>
       </main>
     )
@@ -149,10 +153,10 @@ export default function AnswerWritingPage() {
       <div className="max-w-2xl mx-auto">
 
         <div className="mb-10">
-          <a href="/dashboard">
+          <Link href="/dashboard">
             <span className="text-saffron font-bold text-xl">JOIN</span>
             <span className="text-white font-bold text-xl"> SARKAR</span>
-          </a>
+          </Link>
           <h1 className="text-white text-2xl font-bold mt-6 mb-1">Answer Writing</h1>
           <p className="text-white/50 text-sm">Write your answer and get AI evaluation with model answer</p>
         </div>
@@ -193,14 +197,14 @@ export default function AnswerWritingPage() {
           </div>
 
           <div className="flex gap-2 mb-5">
-            <button
+            <button type="button"
               onClick={() => setActiveTab('write')}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${activeTab === 'write' ? 'bg-saffron text-white' : 'bg-white/5 text-white/50 hover:bg-white/10'}`}
             >
               Write answer
             </button>
             {evaluation && (
-              <button
+              <button type="button"
                 onClick={() => setActiveTab('result')}
                 className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${activeTab === 'result' ? 'bg-saffron text-white' : 'bg-white/5 text-white/50 hover:bg-white/10'}`}
               >
@@ -236,14 +240,14 @@ export default function AnswerWritingPage() {
               )}
 
               <div className="flex gap-3">
-                <button
+                <button type="button"
                   onClick={handleEvaluate}
                   disabled={evaluating}
                   className="flex-1 bg-saffron text-white font-semibold py-3 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50"
                 >
                   {evaluating ? 'Evaluating...' : 'Evaluate my answer'}
                 </button>
-                <button
+                <button type="button"
                   onClick={handleModelAnswer}
                   disabled={generatingModel}
                   className="flex-1 bg-white/10 text-white font-semibold py-3 rounded-xl hover:bg-white/20 transition-colors disabled:opacity-50"
@@ -293,7 +297,7 @@ export default function AnswerWritingPage() {
                 <p className="text-white/70 text-sm leading-relaxed">{evaluation.overall_feedback}</p>
               </div>
 
-              <button
+              <button type="button"
                 onClick={() => setActiveTab('write')}
                 className="w-full bg-white/10 text-white font-semibold py-3 rounded-xl hover:bg-white/20 transition-colors"
               >
@@ -307,7 +311,7 @@ export default function AnswerWritingPage() {
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-white font-semibold">Model Answer</h2>
-              <button onClick={() => setShowModel(false)} className="text-white/40 hover:text-white text-xs transition-colors">Hide</button>
+              <button type="button" onClick={() => setShowModel(false)} className="text-white/40 hover:text-white text-xs transition-colors">Hide</button>
             </div>
             <div className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">{modelAnswer}</div>
           </div>

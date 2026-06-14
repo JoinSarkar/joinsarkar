@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
@@ -193,10 +195,10 @@ export default function WarRoomPage() {
       <div className="max-w-3xl mx-auto">
 
         <div className="mb-10">
-          <a href="/dashboard">
+          <Link href="/dashboard">
             <span className="text-saffron font-bold text-xl">JOIN</span>
             <span className="text-white font-bold text-xl"> SARKAR</span>
-          </a>
+          </Link>
           <div className="mt-6 flex items-start justify-between">
             <div>
               <div className="text-saffron text-xs font-bold tracking-widest mb-1">WAR ROOM</div>
@@ -205,9 +207,9 @@ export default function WarRoomPage() {
               </h1>
               <p className="text-white/50 text-sm">{rankSystem.name} track — {currentRank.title}</p>
             </div>
-            <a href="/checkin" className="shrink-0 bg-saffron text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-saffron/90 transition-colors">
+            <Link href="/checkin" className="shrink-0 bg-saffron text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-saffron/90 transition-colors">
               Check in
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -292,12 +294,12 @@ export default function WarRoomPage() {
         </div>
 
         <div className="flex gap-3">
-          <a href="/checkin" className="flex-1 bg-saffron text-white font-semibold py-3 rounded-xl hover:bg-saffron/90 transition-colors text-center">
+          <Link href="/checkin" className="flex-1 bg-saffron text-white font-semibold py-3 rounded-xl hover:bg-saffron/90 transition-colors text-center">
             Log today's study
-          </a>
-          <a href="/studyplan" className="flex-1 bg-white/10 text-white font-semibold py-3 rounded-xl hover:bg-white/20 transition-colors text-center">
+          </Link>
+          <Link href="/studyplan" className="flex-1 bg-white/10 text-white font-semibold py-3 rounded-xl hover:bg-white/20 transition-colors text-center">
             View study plan
-          </a>
+          </Link>
         </div>
 
       </div>

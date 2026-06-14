@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
@@ -60,6 +62,7 @@ export default function WeeklyReviewPage() {
   }, [])
 
   async function generateReview() {
+    if (generating) return
     setGenerating(true)
     setError('')
     const supabase = createClient()
@@ -135,10 +138,10 @@ export default function WeeklyReviewPage() {
       <div className="max-w-2xl mx-auto">
 
         <div className="mb-10">
-          <a href="/dashboard">
+          <Link href="/dashboard">
             <span className="text-saffron font-bold text-xl">JOIN</span>
             <span className="text-white font-bold text-xl"> SARKAR</span>
-          </a>
+          </Link>
           <div className="mt-6 flex items-center justify-between">
             <div>
               <div className="text-saffron text-xs font-bold tracking-widest mb-1">WEEKLY REVIEW</div>
@@ -147,7 +150,7 @@ export default function WeeklyReviewPage() {
                 {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })} — Week {Math.ceil(new Date().getDate() / 7)}
               </p>
             </div>
-            <button
+            <button type="button"
               onClick={generateReview}
               disabled={generating}
               className="shrink-0 bg-saffron text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50"
@@ -174,7 +177,7 @@ export default function WeeklyReviewPage() {
           <div className="text-center py-16 bg-white/5 border border-white/10 rounded-2xl">
             <p className="text-white/40 text-sm mb-2">No review generated yet this week.</p>
             <p className="text-white/30 text-xs mb-6">Click Generate review to get your personalised weekly analysis.</p>
-            <button onClick={generateReview} className="bg-saffron text-white text-sm font-semibold px-6 py-3 rounded-xl hover:bg-saffron/90 transition-colors">
+            <button type="button" onClick={generateReview} className="bg-saffron text-white text-sm font-semibold px-6 py-3 rounded-xl hover:bg-saffron/90 transition-colors">
               Generate this week's review
             </button>
           </div>

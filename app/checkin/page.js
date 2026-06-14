@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
@@ -81,6 +83,7 @@ export default function CheckinPage() {
   }, [])
 
   async function handleCheckin() {
+    if (saving) return
     setSaving(true)
     setError('')
     const supabase = createClient()
@@ -89,12 +92,14 @@ export default function CheckinPage() {
       ? form.topics_covered.split(',').map(t => t.trim()).filter(Boolean)
       : []
 
+    const hoursToday = parseFloat(form.study_hours_logged) || 0
+
     const checkinData = {
       user_id: user.id,
       date: today,
       checked_in: true,
       mood: form.mood,
-      study_hours_logged: parseFloat(form.study_hours_logged) || 0,
+      study_hours_logged: hoursToday,
       topics_covered: topics,
       mock_attempted: form.mock_attempted,
       mock_score: form.mock_attempted ? parseInt(form.mock_score) || null : null,
@@ -104,42 +109,10 @@ export default function CheckinPage() {
 
     const { error: checkinError } = await supabase
       .from('daily_checkins')
-      .upsert(checkinData)
+      .upsert(checkinData, { onConflict: 'user_id,date' })
 
     if (checkinError) { setError('Failed to save check-in.'); setSaving(false); return }
 
-    // Award XP
-    const xpEarned = calculateXPForCheckin(
-      hoursToday,
-      form.mock_attempted,
-      parseInt(form.mock_score) || 0,
-      newStreak
-    )
-
-    const newXP = (stats?.xp || 0) + xpEarned
-
-    // Check milestones
-    const newStatsForMilestone = {
-      total_hours: newTotal,
-      current_streak: newStreak,
-      total_days_studied: newDays,
-    }
-    const earnedMilestoneKeys = checkMilestones(newStatsForMilestone, stats)
-
-    // Save milestones
-    for (const key of earnedMilestoneKeys) {
-      const milestone = MILESTONES.find(m => m.key === key)
-      if (milestone) {
-        await supabase.from('milestones').upsert({
-          user_id: user.id,
-          milestone_key: key,
-          milestone_title: milestone.title,
-          milestone_desc: milestone.desc,
-        })
-      }
-    }
-
-    const hoursToday = parseFloat(form.study_hours_logged) || 0
     const lastDate = stats?.last_checkin_date
     const yesterday = new Date()
     yesterday.setDate(yesterday.getDate() - 1)
@@ -156,6 +129,33 @@ export default function CheckinPage() {
     const newTotal = (stats?.total_hours || 0) + (lastDate === today ? hoursToday - (todayCheckin?.study_hours_logged || 0) : hoursToday)
     const newDays = lastDate === today ? (stats?.total_days_studied || 0) : (stats?.total_days_studied || 0) + 1
 
+    const xpEarned = calculateXPForCheckin(
+      hoursToday,
+      form.mock_attempted,
+      parseInt(form.mock_score) || 0,
+      newStreak
+    )
+    const newXP = (stats?.xp || 0) + xpEarned
+
+    const newStatsForMilestone = {
+      total_hours: newTotal,
+      current_streak: newStreak,
+      total_days_studied: newDays,
+    }
+    const earnedMilestoneKeys = checkMilestones(newStatsForMilestone, stats)
+
+    for (const key of earnedMilestoneKeys) {
+      const milestone = MILESTONES.find(m => m.key === key)
+      if (milestone) {
+        await supabase.from('milestones').upsert({
+          user_id: user.id,
+          milestone_key: key,
+          milestone_title: milestone.title,
+          milestone_desc: milestone.desc,
+        })
+      }
+    }
+
     await supabase.from('study_stats').upsert({
       user_id: user.id,
       total_hours: Math.max(0, newTotal),
@@ -163,8 +163,10 @@ export default function CheckinPage() {
       longest_streak: newLongest,
       total_days_studied: newDays,
       last_checkin_date: today,
+      xp: newXP,
+      freeze_tokens: newStreak === 7 ? (stats?.freeze_tokens || 0) + 1 : (stats?.freeze_tokens || 0),
       updated_at: new Date().toISOString(),
-    })
+    }, { onConflict: 'user_id' })
 
     const { data: updated } = await supabase
       .from('study_stats')
@@ -184,6 +186,7 @@ export default function CheckinPage() {
 
     setRecentCheckins(recent || [])
     setSaving(false)
+    router.push('/dashboard')
   }
 
   if (loading) {
@@ -200,10 +203,10 @@ export default function CheckinPage() {
       <div className="max-w-2xl mx-auto">
 
         <div className="mb-10">
-          <a href="/dashboard">
+          <Link href="/dashboard">
             <span className="text-saffron font-bold text-xl">JOIN</span>
             <span className="text-white font-bold text-xl"> SARKAR</span>
-          </a>
+          </Link>
           <h1 className="text-white text-2xl font-bold mt-6 mb-1">Daily check-in</h1>
           <p className="text-white/50 text-sm">
             {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -238,7 +241,7 @@ export default function CheckinPage() {
             <label className="text-white/70 text-sm block mb-3">How are you feeling?</label>
             <div className="flex gap-2 flex-wrap">
               {MOODS.map(m => (
-                <button
+                <button type="button"
                   key={m.label}
                   onClick={() => setForm(p => ({ ...p, mood: m.label }))}
                   className={`px-3 py-2 rounded-xl text-sm border transition-colors ${
@@ -281,7 +284,7 @@ export default function CheckinPage() {
           <div className="mb-5">
             <label className="text-white/70 text-sm block mb-3">Did you attempt a mock test today?</label>
             <div className="flex gap-3">
-              <button
+              <button type="button"
                 onClick={() => setForm(p => ({ ...p, mock_attempted: true }))}
                 className={`px-4 py-2 rounded-xl text-sm border transition-colors ${
                   form.mock_attempted
@@ -291,7 +294,7 @@ export default function CheckinPage() {
               >
                 Yes
               </button>
-              <button
+              <button type="button"
                 onClick={() => setForm(p => ({ ...p, mock_attempted: false, mock_score: '' }))}
                 className={`px-4 py-2 rounded-xl text-sm border transition-colors ${
                   !form.mock_attempted
@@ -336,7 +339,7 @@ export default function CheckinPage() {
             </div>
           )}
 
-          <button
+          <button type="button"
             onClick={handleCheckin}
             disabled={saving}
             className="w-full bg-saffron text-white font-semibold py-3 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50"

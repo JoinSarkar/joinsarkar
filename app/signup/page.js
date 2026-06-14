@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { useState } from 'react'
 import { createClient } from '../../lib/supabase'
 
@@ -12,6 +14,7 @@ export default function SignupPage() {
   const [error, setError] = useState('')
 
   async function handleSignup() {
+    if (loading) return
     setLoading(true)
     setError('')
     setMessage('')
@@ -52,10 +55,10 @@ export default function SignupPage() {
       <div className="w-full max-w-md">
 
         <div className="text-center mb-10">
-          <a href="/">
+          <Link href="/">
             <span className="text-saffron font-bold text-2xl">JOIN</span>
             <span className="text-white font-bold text-2xl"> SARKAR</span>
-          </a>
+          </Link>
           <p className="text-white/50 text-sm mt-2">Create your account</p>
         </div>
 
@@ -108,7 +111,7 @@ export default function SignupPage() {
             </div>
           )}
 
-          <button
+          <button type="button"
             onClick={handleSignup}
             disabled={loading}
             className="w-full mt-6 bg-saffron text-white font-semibold py-3 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -118,9 +121,9 @@ export default function SignupPage() {
 
           <p className="text-white/40 text-sm text-center mt-6">
             Already have an account?{' '}
-            <a href="/login" className="text-saffron hover:underline">
+            <Link href="/login" className="text-saffron hover:underline">
               Log in
-            </a>
+            </Link>
           </p>
 
         </div>

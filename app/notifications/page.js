@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
@@ -84,6 +86,7 @@ export default function NotificationsPage() {
   }, [])
 
   async function handleAutoFetch() {
+    if (fetching) return
     if (!exams.length) { setError('No active exams found. Please complete exam recommendations first.'); return }
     setFetching(true)
     setError('')
@@ -133,6 +136,7 @@ export default function NotificationsPage() {
   }
 
   async function handleAdd() {
+    if (saving) return
     if (!form.title || !form.exam_name) { setError('Please fill in exam name and title.'); return }
     setSaving(true)
     setError('')
@@ -200,24 +204,24 @@ export default function NotificationsPage() {
       <div className="max-w-2xl mx-auto">
 
         <div className="mb-10">
-          <a href="/dashboard">
+          <Link href="/dashboard">
             <span className="text-saffron font-bold text-xl">JOIN</span>
             <span className="text-white font-bold text-xl"> SARKAR</span>
-          </a>
+          </Link>
           <div className="mt-6 flex items-center justify-between">
             <div>
               <h1 className="text-white text-2xl font-bold mb-1">Exam tracker</h1>
               <p className="text-white/50 text-sm">Track notifications, deadlines, admit cards, and results</p>
             </div>
             <div className="flex gap-2 shrink-0">
-              <button
+              <button type="button"
                 onClick={handleAutoFetch}
                 disabled={fetching}
                 className="bg-saffron text-white text-xs font-semibold px-3 py-2 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50"
               >
                 {fetching ? 'Searching...' : 'Auto-fetch'}
               </button>
-              <button
+              <button type="button"
                 onClick={() => setShowForm(!showForm)}
                 className="bg-white/10 text-white text-xs font-semibold px-3 py-2 rounded-xl hover:bg-white/20 transition-colors"
               >
@@ -279,7 +283,7 @@ export default function NotificationsPage() {
                 <p className="text-red-400 text-sm">{error}</p>
               </div>
             )}
-            <button onClick={handleAdd} disabled={saving} className="w-full mt-5 bg-saffron text-white font-semibold py-3 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50">
+            <button type="button" onClick={handleAdd} disabled={saving} className="w-full mt-5 bg-saffron text-white font-semibold py-3 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50">
               {saving ? 'Saving...' : 'Save entry'}
             </button>
           </div>
@@ -293,7 +297,7 @@ export default function NotificationsPage() {
 
         <div className="flex gap-2 overflow-x-auto pb-2 mb-6">
           {['all', 'pinned', 'unread', 'application', 'admit_card', 'exam_date', 'result'].map(f => (
-            <button
+            <button type="button"
               key={f}
               onClick={() => setFilter(f)}
               className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize ${filter === f ? 'bg-saffron text-white' : 'bg-white/5 text-white/50 hover:bg-white/10'}`}
@@ -307,7 +311,7 @@ export default function NotificationsPage() {
           <div className="text-center py-16">
             <p className="text-white/30 text-sm mb-2">No entries yet.</p>
             <p className="text-white/20 text-xs mb-6">Click Auto-fetch to search for latest exam notifications automatically.</p>
-            <button onClick={handleAutoFetch} disabled={fetching} className="bg-saffron text-white text-sm font-semibold px-6 py-3 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50">
+            <button type="button" onClick={handleAutoFetch} disabled={fetching} className="bg-saffron text-white text-sm font-semibold px-6 py-3 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50">
               {fetching ? 'Searching...' : 'Auto-fetch notifications'}
             </button>
           </div>
@@ -348,8 +352,8 @@ export default function NotificationsPage() {
                       </div>
                     </div>
                     <div className="flex gap-3 shrink-0">
-                      <button onClick={e => { e.stopPropagation(); togglePin(n.id, n.is_pinned) }} className="text-white/30 hover:text-saffron text-xs transition-colors">pin</button>
-                      <button onClick={e => { e.stopPropagation(); deleteNotif(n.id) }} className="text-white/30 hover:text-red-400 text-xs transition-colors">delete</button>
+                      <button type="button" onClick={e => { e.stopPropagation(); togglePin(n.id, n.is_pinned) }} className="text-white/30 hover:text-saffron text-xs transition-colors">pin</button>
+                      <button type="button" onClick={e => { e.stopPropagation(); deleteNotif(n.id) }} className="text-white/30 hover:text-red-400 text-xs transition-colors">delete</button>
                     </div>
                   </div>
                 </div>

@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
@@ -293,10 +295,10 @@ export default function OnboardingPage() {
       <div className="max-w-xl mx-auto">
 
         <div className="mb-10">
-          <a href="/dashboard">
+          <Link href="/dashboard">
             <span className="text-saffron font-bold text-xl">JOIN</span>
             <span className="text-white font-bold text-xl"> SARKAR</span>
-          </a>
+          </Link>
           <h1 className="text-white text-2xl font-bold mt-6 mb-1">
             {existingProfile?.onboarding_complete ? 'Update your profile' : 'Build your profile'}
           </h1>

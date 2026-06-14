@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
@@ -122,6 +124,7 @@ export default function AdminPage() {
   }
 
   async function handleSaveAffair() {
+    if (saving) return
     if (!form.title || !form.summary || !form.publish_date) {
       setError('Title, summary, and publish date are required.')
       return
@@ -234,16 +237,16 @@ export default function AdminPage() {
 
         <div className="mb-10 flex items-center justify-between">
           <div>
-            <a href="/dashboard">
+            <Link href="/dashboard">
               <span className="text-saffron font-bold text-xl">JOIN</span>
               <span className="text-white font-bold text-xl"> SARKAR</span>
-            </a>
+            </Link>
             <div className="flex items-center gap-2 mt-2">
               <span className="text-xs bg-saffron/20 text-saffron border border-saffron/30 px-2 py-0.5 rounded-full">Admin</span>
               <h1 className="text-white font-bold text-xl">Dashboard</h1>
             </div>
           </div>
-          <a href="/dashboard" className="text-white/40 text-sm hover:text-white transition-colors">Back to app</a>
+          <Link href="/dashboard" className="text-white/40 text-sm hover:text-white transition-colors">Back to app</Link>
         </div>
 
         {success && (
@@ -260,7 +263,7 @@ export default function AdminPage() {
 
         <div className="flex gap-2 mb-8">
           {tabs.map(tab => (
-            <button
+            <button type="button"
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 rounded-xl text-sm font-medium capitalize transition-colors ${activeTab === tab ? 'bg-saffron text-white' : 'bg-white/5 text-white/50 hover:bg-white/10'}`}
@@ -291,7 +294,7 @@ export default function AdminPage() {
           <div>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-white font-semibold text-lg">Current Affairs Manager</h2>
-              <button
+              <button type="button"
                 onClick={() => { setShowForm(!showForm); setEditItem(null); setForm(emptyForm) }}
                 className="bg-saffron text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-saffron/90 transition-colors"
               >
@@ -375,7 +378,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <button
+                <button type="button"
                   onClick={handleSaveAffair}
                   disabled={saving}
                   className="w-full mt-6 bg-saffron text-white font-semibold py-3 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50"
@@ -408,11 +411,11 @@ export default function AdminPage() {
                         <p className="text-white/50 text-xs mt-1 line-clamp-2">{item.summary}</p>
                       </div>
                       <div className="flex gap-2 shrink-0">
-                        <button onClick={() => handleTogglePublish(item.id, item.is_published)} className={`text-xs px-2 py-1 rounded-lg border transition-colors ${item.is_published ? 'border-white/10 text-white/40 hover:text-white' : 'border-teal/30 text-teal hover:bg-teal/10'}`}>
+                        <button type="button" onClick={() => handleTogglePublish(item.id, item.is_published)} className={`text-xs px-2 py-1 rounded-lg border transition-colors ${item.is_published ? 'border-white/10 text-white/40 hover:text-white' : 'border-teal/30 text-teal hover:bg-teal/10'}`}>
                           {item.is_published ? 'Unpublish' : 'Publish'}
                         </button>
-                        <button onClick={() => handleEdit(item)} className="text-xs px-2 py-1 rounded-lg border border-white/10 text-white/40 hover:text-white transition-colors">Edit</button>
-                        <button onClick={() => handleDelete(item.id)} className="text-xs px-2 py-1 rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-colors">Del</button>
+                        <button type="button" onClick={() => handleEdit(item)} className="text-xs px-2 py-1 rounded-lg border border-white/10 text-white/40 hover:text-white transition-colors">Edit</button>
+                        <button type="button" onClick={() => handleDelete(item.id)} className="text-xs px-2 py-1 rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-colors">Del</button>
                       </div>
                     </div>
                   </div>
@@ -432,21 +435,21 @@ export default function AdminPage() {
                   <div className="text-white font-medium text-sm">Quiz cache</div>
                   <div className="text-white/40 text-xs mt-0.5">{cacheStats.quizCached} subjects cached — saves 5 API calls per subject per day</div>
                 </div>
-                <button onClick={() => handleClearCache('quiz_cache')} className="text-xs px-3 py-2 rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-colors shrink-0">Clear</button>
+                <button type="button" onClick={() => handleClearCache('quiz_cache')} className="text-xs px-3 py-2 rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-colors shrink-0">Clear</button>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center justify-between">
                 <div>
                   <div className="text-white font-medium text-sm">Notes cache</div>
                   <div className="text-white/40 text-xs mt-0.5">{cacheStats.notesCached} subjects cached — permanent cache, never expires</div>
                 </div>
-                <button onClick={() => handleClearCache('notes_cache')} className="text-xs px-3 py-2 rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-colors shrink-0">Clear</button>
+                <button type="button" onClick={() => handleClearCache('notes_cache')} className="text-xs px-3 py-2 rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-colors shrink-0">Clear</button>
               </div>
               <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center justify-between">
                 <div>
                   <div className="text-white font-medium text-sm">Current affairs cache</div>
                   <div className="text-white/40 text-xs mt-0.5">{cacheStats.affairsCached} days cached — clears automatically after 24 hours</div>
                 </div>
-                <button onClick={() => handleClearCache('current_affairs')} className="text-xs px-3 py-2 rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-colors shrink-0">Clear</button>
+                <button type="button" onClick={() => handleClearCache('current_affairs')} className="text-xs px-3 py-2 rounded-lg border border-red-500/20 text-red-400/60 hover:text-red-400 transition-colors shrink-0">Clear</button>
               </div>
               <div className="bg-saffron/5 border border-saffron/20 rounded-2xl p-5">
                 <p className="text-saffron/80 text-xs leading-relaxed">

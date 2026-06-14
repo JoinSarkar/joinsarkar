@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
@@ -128,10 +130,10 @@ export default function RecommendationsPage() {
       <div className="max-w-2xl mx-auto">
 
         <div className="mb-10">
-          <a href="/dashboard">
+          <Link href="/dashboard">
             <span className="text-saffron font-bold text-xl">JOIN</span>
             <span className="text-white font-bold text-xl"> SARKAR</span>
-          </a>
+          </Link>
           <div className="mt-6">
             <h1 className="text-white text-2xl font-bold mb-1">Your exam portfolio</h1>
             <p className="text-white/50 text-sm">Recommended based on your profile — maximum syllabus overlap, minimum distraction</p>
@@ -229,7 +231,7 @@ export default function RecommendationsPage() {
 
         <div className="flex gap-3">
           {!saved ? (
-            <button
+            <button type="button"
               onClick={saveRecommendations}
               disabled={saving}
               className="flex-1 bg-saffron text-white font-semibold py-3 rounded-xl hover:bg-saffron/90 transition-colors disabled:opacity-50"
@@ -237,9 +239,9 @@ export default function RecommendationsPage() {
               {saving ? 'Saving...' : 'Commit to these exams'}
             </button>
           ) : (
-            <a href="/studyplan" className="flex-1 bg-teal text-white font-semibold py-3 rounded-xl hover:bg-teal/90 transition-colors text-center">
+            <Link href="/studyplan" className="flex-1 bg-teal text-white font-semibold py-3 rounded-xl hover:bg-teal/90 transition-colors text-center">
               Generate your study plan
-            </a>
+            </Link>
           )}
         </div>
 

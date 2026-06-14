@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '../../lib/supabase'
@@ -121,10 +123,10 @@ export default function PricingPage() {
       <div className="max-w-2xl mx-auto">
 
         <div className="mb-10 text-center">
-          <a href="/dashboard">
+          <Link href="/dashboard">
             <span className="text-saffron font-bold text-xl">JOIN</span>
             <span className="text-white font-bold text-xl"> SARKAR</span>
-          </a>
+          </Link>
           <h1 className="text-white text-2xl font-bold mt-6 mb-2">Choose your plan</h1>
           <p className="text-white/50 text-sm">Cancel anytime. No hidden fees.</p>
         </div>
@@ -160,7 +162,7 @@ export default function PricingPage() {
                 </li>
               ))}
             </ul>
-            <button
+            <button type="button"
               onClick={() => handlePayment('objective')}
               disabled={paying || subscription?.status === 'active'}
               className="w-full py-3 rounded-xl font-semibold text-sm bg-white/10 text-white hover:bg-white/20 transition-colors disabled:opacity-50"
@@ -184,7 +186,7 @@ export default function PricingPage() {
                 </li>
               ))}
             </ul>
-            <button
+            <button type="button"
               onClick={() => handlePayment('advanced')}
               disabled={paying || subscription?.status === 'active'}
               className="w-full py-3 rounded-xl font-semibold text-sm bg-saffron text-white hover:bg-saffron/90 transition-colors disabled:opacity-50"
